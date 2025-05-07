@@ -11,3 +11,8 @@ spring:
       retries: 3
       retry-backoff-ms: 1000
       transaction-id-prefix: tx-rfid-emu-
+
+logging:
+  level:
+    asset.spy.rfid.emu: INFO
+    org.apache.kafka: WARN
