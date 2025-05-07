@@ -1,0 +1,13 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: rfid-emu-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      retries: 3
+      retry-backoff-ms: 1000
+      transaction-id-prefix: tx-rfid-emu-
