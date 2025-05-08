@@ -17,7 +17,7 @@ public class EmulationRequest {
     private String vendorName;
 
     @NotNull(message = "Article cannot be blank")
-    private Integer article;
+    private Long article;
 
     @Min(value = 0, message = "Product count must be grater than 0")
     private Integer count;

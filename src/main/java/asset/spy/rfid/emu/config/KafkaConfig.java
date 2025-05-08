@@ -1,6 +1,9 @@
 package asset.spy.rfid.emu.config;
 
 import asset.spy.rfid.emu.message.ProductStatusResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -42,28 +45,27 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<String, ProductStatusResponse> kafkaProducerFactory() {
+    public ProducerFactory<String, ProductStatusResponse> kafkaProducerFactory(ObjectMapper objectMapper) {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.RETRIES_CONFIG, retries);
         props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, retryBackoffMs);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
 
+        JsonSerializer<ProductStatusResponse> jsonSerializer = new JsonSerializer<>(objectMapper);
+
         DefaultKafkaProducerFactory<String, ProductStatusResponse> factory =
-                new DefaultKafkaProducerFactory<>(props);
+                new DefaultKafkaProducerFactory<>(props, new StringSerializer(), jsonSerializer);
 
         factory.setTransactionIdPrefix(txIdPrefix);
-
         return factory;
     }
 
     @Bean
-    public KafkaTemplate<String, ProductStatusResponse> kafkaTemplate() {
-        return new KafkaTemplate<>(kafkaProducerFactory());
+    public KafkaTemplate<String, ProductStatusResponse> kafkaTemplate(
+            ProducerFactory<String, ProductStatusResponse> kafkaProducerFactory) {
+        return new KafkaTemplate<>(kafkaProducerFactory);
     }
 
     @Bean
@@ -86,5 +88,13 @@ public class KafkaConfig {
         executor.setThreadNamePrefix("kafka-producer-pool-");
         executor.initialize();
         return executor;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
     }
 }
