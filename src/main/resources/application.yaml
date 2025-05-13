@@ -10,7 +10,6 @@ spring:
     producer:
       retries: 3
       retry-backoff-ms: 1000
-      transaction-id-prefix: tx-rfid-emu-
 
 logging:
   level:

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,24 +37,27 @@ public class EmulationService {
         this.topicVendorPrefix = topicVendorPrefix;
     }
 
-    @Async("kafkaTaskExecutor")
     public void processEmulationRequest(EmulationRequest request) {
         log.info("Processing emulation request: {}", request);
-
         String topic = formatTopicName(request.getVendorName());
         List<String> itemIds = generateItemIds(request.getCount());
         Map<String, List<ProductStatus>> flows = productFlowBuilder.generateStateSequence(itemIds, request);
 
+        simulateProductFlows(
+                topic,
+                request.getArticle(),
+                flows,
+                request.getMinTimeoutMin(),
+                request.getMaxTimeoutMin()
+        );
+    }
+
+    private void simulateProductFlows(String topic, Long article, Map<String, List<ProductStatus>> flows,
+                                      int minTimeoutMin, int maxTimeoutMin) {
         List<CompletableFuture<Void>> tasks = flows.entrySet().stream()
-                .map(entry -> CompletableFuture.runAsync(() ->
-                        statusSimulator.simulate(
-                                topic,
-                                entry.getKey(),
-                                request.getArticle(),
-                                entry.getValue(),
-                                request.getMinTimeoutMin(),
-                                request.getMaxTimeoutMin()
-                        ), taskExecutor))
+                .map(entry -> CompletableFuture.runAsync(
+                        () -> statusSimulator.simulate(topic, entry.getKey(), article,
+                                entry.getValue(), minTimeoutMin, maxTimeoutMin), taskExecutor))
                 .toList();
 
         CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))

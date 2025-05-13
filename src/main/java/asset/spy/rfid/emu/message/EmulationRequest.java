@@ -28,7 +28,7 @@ public class EmulationRequest {
     @Min(value = 0, message = "Maximum timeout must be greater than 0")
     private Integer maxTimeoutMin;
 
-    @Min(value = 0, message = "Defective frequency mus be between 0 and 1")
+    @Min(value = 0, message = "Defective frequency must be between 0 and 1")
     @Max(value = 1, message = "Defective frequency mus be between 0 and 1")
     private Double defectiveFrequency;
 

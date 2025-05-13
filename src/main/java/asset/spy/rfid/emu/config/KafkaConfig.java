@@ -4,7 +4,6 @@ import asset.spy.rfid.emu.message.ProductStatusResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -34,9 +33,6 @@ public class KafkaConfig {
     @Value("${spring.kafka.producer.retry-backoff-ms}")
     private int retryBackoffMs;
 
-    @Value("${spring.kafka.producer.transaction-id-prefix}")
-    private String txIdPrefix;
-
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
@@ -54,25 +50,13 @@ public class KafkaConfig {
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
 
         JsonSerializer<ProductStatusResponse> jsonSerializer = new JsonSerializer<>(objectMapper);
-
-        DefaultKafkaProducerFactory<String, ProductStatusResponse> factory =
-                new DefaultKafkaProducerFactory<>(props, new StringSerializer(), jsonSerializer);
-
-        factory.setTransactionIdPrefix(txIdPrefix);
-        return factory;
+        return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), jsonSerializer);
     }
 
     @Bean
     public KafkaTemplate<String, ProductStatusResponse> kafkaTemplate(
             ProducerFactory<String, ProductStatusResponse> kafkaProducerFactory) {
         return new KafkaTemplate<>(kafkaProducerFactory);
-    }
-
-    @Bean
-    public AdminClient adminClient() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        return AdminClient.create(props);
     }
 
     @Bean("kafkaTaskExecutor")

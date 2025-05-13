@@ -1,32 +1,10 @@
-version: '3'
-
 services:
-  kafka:
-    image: bitnami/kafka:latest
-    container_name: kafka
+  rfid-service:
+    build:
+      dockerfile: Dockerfile
+    container_name: rfid-service
     ports:
-      - "9092:9092"
+      - "8083:8083"
     environment:
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=false
-      - ALLOW_PLAINTEXT_LISTENER=yes
-    volumes:
-      - kafka_data:/bitnami/kafka
-    restart: unless-stopped
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    ports:
-      - "8085:8080"
-    environment:
-      - KAFKA_CLUSTERS_0_NAME=local
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
-    depends_on:
-      - kafka
-    restart: unless-stopped
-
-volumes:
-  kafka_data:
-    driver: local
+      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka-broker:9092
+      - SPRING_APPLICATION_NAME=rfid-emulator
