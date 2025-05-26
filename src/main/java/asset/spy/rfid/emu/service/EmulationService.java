@@ -1,6 +1,8 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.message.EmulationRequest;
+import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
+import asset.spy.rfid.emu.dto.context.SimulationContext;
+import asset.spy.rfid.emu.dto.context.TimeoutSettingContext;
 import asset.spy.rfid.emu.model.ProductStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,27 +39,31 @@ public class EmulationService {
         this.topicVendorPrefix = topicVendorPrefix;
     }
 
-    public void processEmulationRequest(EmulationRequest request) {
+    public void processEmulationRequest(EmulationRequestDto request) {
         log.info("Processing emulation request: {}", request);
         String topic = formatTopicName(request.getVendorName());
         List<String> itemIds = generateItemIds(request.getCount());
         Map<String, List<ProductStatus>> flows = productFlowBuilder.generateStateSequence(itemIds, request);
 
-        simulateProductFlows(
-                topic,
-                request.getArticle(),
-                flows,
-                request.getMinTimeoutMin(),
-                request.getMaxTimeoutMin()
-        );
+        TimeoutSettingContext timeoutSettings = TimeoutSettingContext.builder()
+                .minTimeoutMin(request.getMinTimeoutMin())
+                .maxTimeoutMin(request.getMaxTimeoutMin())
+                .build();
+
+        simulateProductFlows(topic, request.getArticle(), flows, timeoutSettings);
     }
 
-    private void simulateProductFlows(String topic, Long article, Map<String, List<ProductStatus>> flows,
-                                      int minTimeoutMin, int maxTimeoutMin) {
+    private void simulateProductFlows(String topic, Long article,
+                                      Map<String, List<ProductStatus>> flows,
+                                      TimeoutSettingContext timeoutSettings) {
         List<CompletableFuture<Void>> tasks = flows.entrySet().stream()
-                .map(entry -> CompletableFuture.runAsync(
-                        () -> statusSimulator.simulate(topic, entry.getKey(), article,
-                                entry.getValue(), minTimeoutMin, maxTimeoutMin), taskExecutor))
+                .map(entry -> {
+                    SimulationContext context = buildSimulationContext(topic, article, entry.getKey(), entry.getValue());
+
+                    return CompletableFuture.runAsync(
+                            () -> statusSimulator.simulate(context, timeoutSettings),
+                            taskExecutor);
+                })
                 .toList();
 
         CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
@@ -78,5 +84,15 @@ public class EmulationService {
         return IntStream.range(0, count)
                 .mapToObj(i -> UUID.randomUUID().toString())
                 .collect(Collectors.toList());
+    }
+
+    private SimulationContext buildSimulationContext(String topic, Long article, String itemId,
+                                                     List<ProductStatus> statuses) {
+        return SimulationContext.builder()
+                .topic(topic)
+                .itemId(itemId)
+                .article(article)
+                .statuses(statuses)
+                .build();
     }
 }

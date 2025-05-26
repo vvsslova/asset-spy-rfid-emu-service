@@ -2,15 +2,13 @@ package asset.spy.rfid.emu.service.strategy;
 
 import asset.spy.rfid.emu.model.ProductStatus;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Slf4j
-@Component("lost")
+@Component
 @RequiredArgsConstructor
 public class LostStateSequenceStrategy extends BaseStateSequenceStrategy {
 
@@ -27,7 +25,7 @@ public class LostStateSequenceStrategy extends BaseStateSequenceStrategy {
     }
 
     @Override
-    public String getType() {
-        return StrategyType.LOST.getValue();
+    public StrategyType getType() {
+        return StrategyType.LOST;
     }
 }

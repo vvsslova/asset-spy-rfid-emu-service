@@ -6,10 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum StrategyType {
-    DEFECTIVE("defective"),
-    LOST("lost"),
-    QUICK_SALE("quickSale"),
-    FULL("full");
-
-    private final String value;
+    DEFECTIVE,
+    LOST,
+    QUICK_SALE,
+    FULL
 }

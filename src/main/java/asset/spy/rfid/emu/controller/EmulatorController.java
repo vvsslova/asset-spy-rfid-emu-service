@@ -1,6 +1,6 @@
 package asset.spy.rfid.emu.controller;
 
-import asset.spy.rfid.emu.message.EmulationRequest;
+import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
 import asset.spy.rfid.emu.service.EmulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class EmulatorController {
     private final EmulationService emulationService;
 
     @PostMapping("/emulate")
-    public ResponseEntity<String> startEmulator(@Valid @RequestBody EmulationRequest request) {
+    public ResponseEntity<String> startEmulator(@Valid @RequestBody EmulationRequestDto request) {
         emulationService.processEmulationRequest(request);
         return ResponseEntity.accepted().body("OK");
     }

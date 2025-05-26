@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
-@Component("quickSale")
+@Component
 public class QuickSaleStateSequenceStrategy extends BaseStateSequenceStrategy {
     @Override
     public List<ProductStatus> buildSequence() {
@@ -18,7 +18,7 @@ public class QuickSaleStateSequenceStrategy extends BaseStateSequenceStrategy {
     }
 
     @Override
-    public String getType() {
-        return StrategyType.QUICK_SALE.getValue();
+    public StrategyType getType() {
+        return StrategyType.QUICK_SALE;
     }
 }

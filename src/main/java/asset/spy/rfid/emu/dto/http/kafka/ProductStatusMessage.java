@@ -1,4 +1,4 @@
-package asset.spy.rfid.emu.message;
+package asset.spy.rfid.emu.dto.http.kafka;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductStatusResponse {
+public class ProductStatusMessage {
     private String itemId;
     private Long article;
     private String productStatus;

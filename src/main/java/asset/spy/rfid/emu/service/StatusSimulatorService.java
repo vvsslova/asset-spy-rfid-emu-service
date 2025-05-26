@@ -1,10 +1,11 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.message.ProductStatusResponse;
+import asset.spy.rfid.emu.dto.http.kafka.ProductStatusMessage;
+import asset.spy.rfid.emu.dto.context.SimulationContext;
+import asset.spy.rfid.emu.dto.context.TimeoutSettingContext;
 import asset.spy.rfid.emu.model.ProductStatus;
 import asset.spy.rfid.emu.service.strategy.StrategyType;
 import asset.spy.rfid.emu.service.strategy.StateSequenceStrategyFactory;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
@@ -12,14 +13,13 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Random;
 
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Slf4j
 @Service
 public class StatusSimulatorService {
 
@@ -36,30 +36,30 @@ public class StatusSimulatorService {
         this.strategyFactory = stateSequenceStrategyFactory;
     }
 
-    public void simulate(String topic, String itemId, Long article, List<ProductStatus> statuses,
-                         int minTimeoutMin, int maxTimeoutMin) {
+    public void simulate(SimulationContext context, TimeoutSettingContext timeoutSettings) {
         AtomicInteger index = new AtomicInteger(0);
-        processStatuses(topic, itemId, article, statuses, minTimeoutMin, maxTimeoutMin, index, new Random());
+        processStatuses(context, timeoutSettings, index);
     }
 
-    private void processStatuses(String topic, String itemId, Long article, List<ProductStatus> statuses,
-                                 int minTimeoutMin, int maxTimeoutMin, AtomicInteger index, Random random) {
-        List<ProductStatus> safeStatuses = getDefaultStatusSequence(statuses);
+    private void processStatuses(SimulationContext context, TimeoutSettingContext timeoutSettings, AtomicInteger index) {
+        List<ProductStatus> safeStatuses = getDefaultStatusSequence(context.statuses());
+
         if (!hasNextStatus(index.get(), safeStatuses)) {
             return;
         }
 
         ProductStatus status = getCurrentStatus(safeStatuses, index.get());
-        sendMessage(topic, itemId, createMessage(itemId, article, status));
+        ProductStatusMessage message = createMessage(context.itemId(), context.article(), status);
+        sendMessage(context.topic(), context.itemId(), message);
 
         if (!status.isFinal()) {
-            scheduleNextStatus(topic, itemId, article, safeStatuses, minTimeoutMin, maxTimeoutMin, index, random);
+            scheduleNextStatus(context, timeoutSettings, index);
         }
     }
 
     private List<ProductStatus> getDefaultStatusSequence(List<ProductStatus> statuses) {
         if (statuses == null || statuses.isEmpty()) {
-            return strategyFactory.getStrategy(StrategyType.FULL.getValue()).buildSequence();
+            return strategyFactory.getStrategy(StrategyType.FULL).buildSequence();
         }
         return statuses;
     }
@@ -72,18 +72,17 @@ public class StatusSimulatorService {
         return statuses.get(index);
     }
 
-    private void scheduleNextStatus(String topic, String itemId, Long article, List<ProductStatus> statuses,
-                                    int minTimeoutMin, int maxTimeoutMin, AtomicInteger index, Random random) {
-        int delay = calculateDelay(minTimeoutMin, maxTimeoutMin, random);
-        index.incrementAndGet();
+    private void scheduleNextStatus(SimulationContext context, TimeoutSettingContext timeoutSettings, AtomicInteger index) {
+        int delay = calculateDelay(timeoutSettings.minTimeoutMin(), timeoutSettings.maxTimeoutMin());
 
-        delayedExecutor(delay, TimeUnit.MILLISECONDS, kafkaTaskExecutor).execute(() ->
-                processStatuses(topic, itemId, article, statuses, minTimeoutMin, maxTimeoutMin, index, random)
-        );
+        delayedExecutor(delay, TimeUnit.MILLISECONDS, kafkaTaskExecutor).execute(() -> {
+            int nextIndex = index.incrementAndGet();
+            processStatuses(context, timeoutSettings, new AtomicInteger(nextIndex));
+        });
     }
 
-    private ProductStatusResponse createMessage(String itemId, Long article, ProductStatus status) {
-        return ProductStatusResponse.builder()
+    private ProductStatusMessage createMessage(String itemId, Long article, ProductStatus status) {
+        return ProductStatusMessage.builder()
                 .itemId(itemId)
                 .article(article)
                 .productStatus(status.getValue())
@@ -91,17 +90,20 @@ public class StatusSimulatorService {
                 .build();
     }
 
-    private void sendMessage(String topic, String key, ProductStatusResponse message) {
+    private void sendMessage(String topic, String key, ProductStatusMessage message) {
         kafkaProducerService.sendMessage(topic, key, message);
     }
 
-    private int calculateDelay(int min, int max, Random random) {
-        if (min == max) {
-            return min * 60_000;
-        }
-        int lower = Math.min(min, max);
-        int upper = Math.max(min, max);
-        int delayMin = lower + random.nextInt(upper - lower + 1);
-        return Math.max(delayMin * 60_000, 0);
+    private int calculateDelay(int minTimeoutMin, int maxTimeoutMin) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int delayMin = Math.min(minTimeoutMin, maxTimeoutMin);
+        int delayMax = Math.max(minTimeoutMin, maxTimeoutMin);
+
+        delayMin = Math.max(delayMin, 1);
+
+        int delayMinutes = delayMin + random.nextInt(delayMax - delayMin + 1);
+        int delaySeconds = random.nextInt(60);
+
+        return (delayMinutes * 60 + delaySeconds) * 1000;
     }
 }

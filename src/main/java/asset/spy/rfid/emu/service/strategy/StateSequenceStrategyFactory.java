@@ -7,11 +7,12 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class StateSequenceStrategyFactory {
-    private final Map<String, StateSequenceStrategy> strategies;
+    private final Map<StrategyType, StateSequenceStrategy> strategies;
 
     @Autowired
     public StateSequenceStrategyFactory(List<StateSequenceStrategy> strategyList) {
@@ -19,11 +20,8 @@ public class StateSequenceStrategyFactory {
         strategyList.forEach(strategy -> strategies.put(strategy.getType(), strategy));
     }
 
-    public StateSequenceStrategy getStrategy(String type) {
-        StateSequenceStrategy strategy = strategies.get(type);
-        if (strategy == null) {
-            throw new IllegalArgumentException("Unknown type of strategy" + type);
-        }
-        return strategy;
+    public StateSequenceStrategy getStrategy(StrategyType type) {
+        return Optional.ofNullable(strategies.get(type))
+                .orElseThrow(() -> new IllegalArgumentException("Unknown type of strategy: " + type));
     }
 }

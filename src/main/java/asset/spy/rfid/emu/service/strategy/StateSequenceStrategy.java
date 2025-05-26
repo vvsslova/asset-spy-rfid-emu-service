@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface StateSequenceStrategy {
     List<ProductStatus> buildSequence();
-    String getType();
+    StrategyType getType();
 }

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component("full")
+@Component
 public class FullStateSequenceStrategy extends BaseStateSequenceStrategy {
 
     @Override
@@ -14,7 +14,7 @@ public class FullStateSequenceStrategy extends BaseStateSequenceStrategy {
     }
 
     @Override
-    public String getType() {
-        return StrategyType.FULL.getValue();
+    public StrategyType getType() {
+        return StrategyType.FULL;
     }
 }

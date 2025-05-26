@@ -1,4 +1,4 @@
-package asset.spy.rfid.emu.message;
+package asset.spy.rfid.emu.dto.http.kafka;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class EmulationRequest {
+public class EmulationRequestDto {
     @NotNull(message = "Vendor name cannot be blank")
     private String vendorName;
 

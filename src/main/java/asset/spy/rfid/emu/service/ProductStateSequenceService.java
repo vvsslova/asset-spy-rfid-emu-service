@@ -1,11 +1,10 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.message.EmulationRequest;
+import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
 import asset.spy.rfid.emu.model.ProductStatus;
 import asset.spy.rfid.emu.service.strategy.StrategyType;
 import asset.spy.rfid.emu.service.strategy.StateSequenceStrategyFactory;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Random;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ProductStateSequenceService {
 
@@ -28,7 +26,7 @@ public class ProductStateSequenceService {
     private record SequenceDistribution(int defective, int lost, int quickSale) {
     }
 
-    public Map<String, List<ProductStatus>> generateStateSequence(List<String> itemIds, EmulationRequest request) {
+    public Map<String, List<ProductStatus>> generateStateSequence(List<String> itemIds, EmulationRequestDto request) {
         SequenceDistribution distribution = calculateDistribution(
                 itemIds.size(),
                 request.getDefectiveFrequency(),
@@ -56,12 +54,12 @@ public class ProductStateSequenceService {
         Map<String, List<ProductStatus>> flows = new HashMap<>();
         List<String> remainingIds = new ArrayList<>(itemIds);
 
-        assignSequence(flows, remainingIds, distribution.defective, StrategyType.DEFECTIVE.getValue());
-        assignSequence(flows, remainingIds, distribution.lost, StrategyType.LOST.getValue());
-        assignSequence(flows, remainingIds, distribution.quickSale, StrategyType.QUICK_SALE.getValue());
+        assignSequence(flows, remainingIds, distribution.defective, StrategyType.DEFECTIVE);
+        assignSequence(flows, remainingIds, distribution.lost, StrategyType.LOST);
+        assignSequence(flows, remainingIds, distribution.quickSale, StrategyType.QUICK_SALE);
 
         for (String id : remainingIds) {
-            flows.put(id, strategyFactory.getStrategy(StrategyType.FULL.getValue()).buildSequence());
+            flows.put(id, strategyFactory.getStrategy(StrategyType.FULL).buildSequence());
         }
         return flows;
     }
@@ -97,7 +95,7 @@ public class ProductStateSequenceService {
     }
 
     private void assignSequence(Map<String, List<ProductStatus>> flows, List<String> availableIds,
-                                int count, String strategyType) {
+                                int count, StrategyType strategyType) {
         if (count <= 0 || availableIds.isEmpty()) {
             return;
         }

@@ -1,6 +1,6 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.message.ProductStatusResponse;
+import asset.spy.rfid.emu.dto.http.kafka.ProductStatusMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -14,11 +14,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class KafkaProducerService {
 
-    private final KafkaTemplate<String, ProductStatusResponse> kafkaTemplate;
+    private final KafkaTemplate<String, ProductStatusMessage> kafkaTemplate;
 
-    public void sendMessage(String topic, String key, ProductStatusResponse message) {
+    public void sendMessage(String topic, String key, ProductStatusMessage message) {
         log.info("Sending message to topic {}: {}", topic, message);
-        CompletableFuture<SendResult<String, ProductStatusResponse>> future =
+        CompletableFuture<SendResult<String, ProductStatusMessage>> future =
                 kafkaTemplate.send(topic, key, message);
 
         future.whenComplete((result, exception) -> {

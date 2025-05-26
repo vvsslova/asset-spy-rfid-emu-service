@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
-@Component("defective")
+@Component
 public class DefectiveStateSequenceStrategy extends BaseStateSequenceStrategy {
 
     @Override
@@ -19,7 +19,7 @@ public class DefectiveStateSequenceStrategy extends BaseStateSequenceStrategy {
     }
 
     @Override
-    public String getType() {
-        return StrategyType.DEFECTIVE.getValue();
+    public StrategyType getType() {
+        return StrategyType.DEFECTIVE;
     }
 }

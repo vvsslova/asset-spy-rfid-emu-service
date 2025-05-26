@@ -1,14 +1,13 @@
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM maven:3.8.2-openjdk-17 AS build
 WORKDIR /workspace/app
 
 COPY pom.xml .
-COPY src src
+RUN mvn dependency:go-offline
 
-RUN apk add --no-cache maven
+COPY src ./src
+RUN mvn package -DskipTests
 
-RUN mvn install -DskipTests
-
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-focal
 
 WORKDIR /app
 

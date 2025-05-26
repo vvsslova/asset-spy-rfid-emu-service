@@ -53,7 +53,6 @@ services:
     networks:
       - kafka-net
 
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -61,25 +60,10 @@ services:
       - "8085:8080"
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-broker:9092
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-broker:9092
     depends_on:
       - kafka-broker
     restart: unless-stopped
-    networks:
-      - kafka-net
-
-  rfid-service:
-    build:
-      dockerfile: Dockerfile
-    container_name: rfid-service
-    ports:
-      - "8083:8083"
-    environment:
-      - SPRING_KAFKA_BOOTSTRAP-SERVERS=kafka-broker:9092
-      - SPRING_APPLICATION_NAME=rfid-emulator
-    depends_on:
-      kafka-broker:
-        condition: service_healthy
     networks:
       - kafka-net
 
