@@ -1,4 +1,4 @@
-package asset.spy.rfid.emu.dto.http.kafka;
+package asset.spy.rfid.emu.dto.http;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

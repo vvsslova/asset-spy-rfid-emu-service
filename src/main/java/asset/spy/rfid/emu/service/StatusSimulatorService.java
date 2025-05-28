@@ -1,13 +1,16 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.dto.http.kafka.ProductStatusMessage;
+import asset.spy.rfid.emu.dto.context.MessageSendContext;
+import asset.spy.rfid.emu.dto.kafka.ProductStatusMessage;
 import asset.spy.rfid.emu.dto.context.SimulationContext;
 import asset.spy.rfid.emu.dto.context.TimeoutSettingContext;
 import asset.spy.rfid.emu.model.ProductStatus;
 import asset.spy.rfid.emu.service.strategy.StrategyType;
 import asset.spy.rfid.emu.service.strategy.StateSequenceStrategyFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -16,11 +19,13 @@ import java.util.List;
 
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
+@Slf4j
 public class StatusSimulatorService {
 
     private final KafkaProducerService kafkaProducerService;
@@ -50,11 +55,29 @@ public class StatusSimulatorService {
 
         ProductStatus status = getCurrentStatus(safeStatuses, index.get());
         ProductStatusMessage message = createMessage(context.itemId(), context.article(), status);
-        sendMessage(context.topic(), context.itemId(), message);
+        MessageSendContext messageContext = new MessageSendContext(context.topic(), context.itemId(), message, status,
+                context, timeoutSettings, index);
+        sendMessageWithCallback(messageContext);
 
-        if (!status.isFinal()) {
-            scheduleNextStatus(context, timeoutSettings, index);
-        }
+    }
+
+    private void sendMessageWithCallback(MessageSendContext context) {
+        CompletableFuture<SendResult<String, ProductStatusMessage>> future =
+                kafkaProducerService.sendMessage(context.topic(), context.key(), context.message());
+
+        future.whenComplete((result, exception) -> {
+            if (exception != null) {
+                log.error("Failed to send message for item {}: {}", context.simulationContext().itemId(),
+                        exception.getMessage());
+                return;
+            }
+
+            if (!context.status().isFinal()) {
+                scheduleNextStatus(context.simulationContext(), context.timeoutSettingContext(), context.index());
+            } else {
+                log.info("Completed status sequence for item: {}", context.simulationContext().itemId());
+            }
+        });
     }
 
     private List<ProductStatus> getDefaultStatusSequence(List<ProductStatus> statuses) {
@@ -88,10 +111,6 @@ public class StatusSimulatorService {
                 .productStatus(status.getValue())
                 .timestamp(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();
-    }
-
-    private void sendMessage(String topic, String key, ProductStatusMessage message) {
-        kafkaProducerService.sendMessage(topic, key, message);
     }
 
     private int calculateDelay(int minTimeoutMin, int maxTimeoutMin) {

@@ -1,4 +1,4 @@
-package asset.spy.rfid.emu.dto.http.kafka;
+package asset.spy.rfid.emu.dto.kafka;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

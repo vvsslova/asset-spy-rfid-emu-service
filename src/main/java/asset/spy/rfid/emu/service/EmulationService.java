@@ -1,6 +1,6 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
+import asset.spy.rfid.emu.dto.http.EmulationRequestDto;
 import asset.spy.rfid.emu.dto.context.SimulationContext;
 import asset.spy.rfid.emu.dto.context.TimeoutSettingContext;
 import asset.spy.rfid.emu.model.ProductStatus;

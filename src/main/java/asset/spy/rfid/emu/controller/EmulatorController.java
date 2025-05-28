@@ -1,6 +1,6 @@
 package asset.spy.rfid.emu.controller;
 
-import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
+import asset.spy.rfid.emu.dto.http.EmulationRequestDto;
 import asset.spy.rfid.emu.service.EmulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

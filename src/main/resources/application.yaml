@@ -13,6 +13,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     properties:
-      enable-idempotence: true
       retry-backoff-ms: 1000
+      enable-idempotence: true
+      max-in-flight-request-per-connection: 1
 

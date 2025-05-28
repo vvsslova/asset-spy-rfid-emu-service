@@ -1,6 +1,6 @@
 package asset.spy.rfid.emu.service;
 
-import asset.spy.rfid.emu.dto.http.kafka.EmulationRequestDto;
+import asset.spy.rfid.emu.dto.http.EmulationRequestDto;
 import asset.spy.rfid.emu.model.ProductStatus;
 import asset.spy.rfid.emu.service.strategy.StrategyType;
 import asset.spy.rfid.emu.service.strategy.StateSequenceStrategyFactory;
