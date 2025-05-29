@@ -1,0 +1,19 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: rfid-emu-service
+
+  kafka:
+    bootstrap-servers: kafka-broker:9092
+    producer:
+      retries: 3
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      retry-backoff-ms: 1000
+      enable-idempotence: true
+      max-in-flight-request-per-connection: 1
+
