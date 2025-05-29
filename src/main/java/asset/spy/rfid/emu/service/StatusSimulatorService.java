@@ -55,10 +55,9 @@ public class StatusSimulatorService {
 
         ProductStatus status = getCurrentStatus(safeStatuses, index.get());
         ProductStatusMessage message = createMessage(context.itemId(), context.article(), status);
-        MessageSendContext messageContext = new MessageSendContext(context.topic(), context.itemId(), message, status,
-                context, timeoutSettings, index);
+        MessageSendContext messageContext = new MessageSendContext(context.topic(), context.article().toString(),
+                message, status, context, timeoutSettings, index);
         sendMessageWithCallback(messageContext);
-
     }
 
     private void sendMessageWithCallback(MessageSendContext context) {
