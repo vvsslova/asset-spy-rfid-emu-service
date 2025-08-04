@@ -1,6 +1,7 @@
 package asset.spy.rfid.emu.controller;
 
 import asset.spy.rfid.emu.dto.http.EmulationRequestDto;
+import asset.spy.rfid.emu.open.api.rest.EmulatorOpenApi;
 import asset.spy.rfid.emu.service.EmulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/rfid")
 @RequiredArgsConstructor
-public class EmulatorController {
+public class EmulatorController implements EmulatorOpenApi {
 
     private final EmulationService emulationService;
 
