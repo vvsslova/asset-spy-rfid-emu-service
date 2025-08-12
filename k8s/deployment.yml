@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rfid-emu-service
+  namespace: asset-spy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rfid-emu-service
+  template:
+    metadata:
+      labels:
+        app: rfid-emu-service
+    spec:
+      containers:
+        - name: rfid-emu-service
+          image: vvsslova/asset-spy-rfid-emu-service:latest
+          envFrom:
+            - configMapRef:
+                name: rfid-emu-service-configmap
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "150m"
+            limits:
+              memory: "384Mi"
+              cpu: "300m"
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms256m -Xmx384m"
+          ports:
+            - containerPort: 8083
