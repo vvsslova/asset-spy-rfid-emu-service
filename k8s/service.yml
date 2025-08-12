@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rfid-emu-service
+  namespace: asset-spy
+spec:
+  selector:
+    app: rfid-emu-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP
