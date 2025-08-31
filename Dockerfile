@@ -1,16 +1,9 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY pom.xml .
-COPY src ./src
+COPY target/rfid-emu-service-0.0.1-SNAPSHOT.jar /app/rfid-emu-service.jar
 
-RUN mvn clean package
-
-FROM eclipse-temurin:17-jdk
-
-COPY --from=build /app/target/*.jar app.jar
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/rfid-emu-service.jar"]
 
 EXPOSE 8083
